@@ -1,6 +1,7 @@
 package File::Cat;
 
 use strict;
+use Carp;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
 require Exporter;
@@ -8,7 +9,7 @@ require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw( &cat &cattail	);
 
-$VERSION = '1.1';
+$VERSION = '1.2';
 
 
 
@@ -35,18 +36,21 @@ computer should be without one!
 
 =item *
 
-cat I<FILENAME>, I<FILEHANDLE>
+cat I<EXPR>, I<FILEHANDLE>
 
-Prints FILENAME to FILEHANDLE, or returns false if an error occurred.
+Copies data from EXPR to FILEHANDLE, or returns false if an error occurred.
+EXPR can be either an open readable filehandle or a filename to use as input.
 
 =cut
 
 
 
 sub cat ($$) {
-	my ($name, $handle) = @_;
+	my ($input, $handle) = @_;
 
-	open FILE, $name or return;
+	unless (ref \$input eq 'GLOB' or ref \$input eq 'REF') {
+		open FILE, $input or return;
+	}
 	while (<FILE>) {
 		print $handle $_;
 	}
@@ -61,20 +65,24 @@ sub cat ($$) {
 
 =item *
 
-cattail I<FILENAME>, I<FILEHANDLE>
+cattail I<EXPR>, I<FILEHANDLE>
 
-Prints FILENAME to FILEHANDLE -- backwards, line by line -- or returns
-false if an error occurred.
+Prints EXPR to FILEHANDLE -- backwards, line by line -- or returns
+false if an error occurred. Again, EXPR can be either a filehandle
+or a filename.
 
 =cut
 
 
 
-sub cattail {
-	my ($name, $handle) = @_;
+sub cattail ($$) {
+	my ($input, $handle) = @_;
 	my @lines = (0);
 
-	open FILE, $name or return;
+    unless (ref \$input eq 'GLOB' or ref \$input eq 'REF') {
+		open FILE, $input or return;
+	}
+
 	while (<FILE>) {
 		$lines[$.] = tell FILE;
 	}
